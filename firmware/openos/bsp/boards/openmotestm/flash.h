@@ -15,8 +15,9 @@
 //=========================== public ==========================================
 #include "stdint.h"
 
-void flash_init();
-void flash_write_ID();
-void flash_read_ID();
-void flash_getID(uint8_t* address);
+void     flash_init();
+uint8_t  flash_erasePage(uint32_t address);
+uint8_t  flash_write(uint32_t address,uint16_t data);
+uint16_t flash_read(uint32_t address);
+void     flash_getID(uint32_t address);
 #endif
