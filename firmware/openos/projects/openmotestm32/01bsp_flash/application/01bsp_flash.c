@@ -13,105 +13,66 @@
 #include "uart.h"
 
 //=========================== define ==========================================
-#define LAST_PAGE_ADDRESS  0x0807F800
+#define PAGE255_ADDRESS    0x0807F800
 #define ID_ADDRESS         0x0807FFF0
-#define FLASH_SIZE_ADDRESS 0x1FFFF7E0
 #define ID_LENGTH          8
-//address:0x14 15 92 00 00 00 02
+
+#define WRP3_ADDRESS       0x1FFFF80E
+#define nWRP3_VALUE        0xFF //page 62~255 is non- written protection
+
+//address:0x14-15-92-05-01-01-00-01
 #define HEADBYTE_FIR  0x1514  
-#define HEADBYTE_SEC  0x0092
-#define HEADBYTE_THR  0x0000
+#define HEADBYTE_SEC  0x0592
+#define HEADBYTE_THR  0x0101
 #define HEADBYTE_FOU  0x0100
 
 //=========================== variables =======================================
 
-typedef struct {
-   uint8_t lastTxByteIndex;
-   uint8_t stringToSend[20];
-   uint16_t temp;
-} app_vars_t;
-
-app_vars_t app_vars;
-
-//=========================== prototypes ======================================
-
-void cb_uartTxDone();
-void cb_uartRxCb();
-
 //=========================== main ============================================
 
 int mote_main(void) {
-
+  
+   uint8_t status;
+  
    board_init();
-   
-   // clear local variable
-   memset(&app_vars,0,sizeof(app_vars_t));
-   
-   // setup UART
-   uart_setCallbacks(cb_uartTxDone,cb_uartRxCb);
-   uart_enableInterrupts();
    
    RCC_HSICmd(ENABLE);
    flash_init();
-   flash_erasePage(LAST_PAGE_ADDRESS);
-  
-   flash_write(ID_ADDRESS,  HEADBYTE_FIR);
-   leds_debug_toggle();
-   flash_write(ID_ADDRESS+2,HEADBYTE_SEC);
-   leds_radio_toggle();
-   flash_write(ID_ADDRESS+4,HEADBYTE_THR);
-   leds_sync_toggle();
-   flash_write(ID_ADDRESS+6,HEADBYTE_FOU);
-   leds_error_toggle();
    
-   app_vars.stringToSend[0] = '~';
-   app_vars.temp = flash_read(ID_ADDRESS);
-   app_vars.stringToSend[1] = (app_vars.temp>>8)&0xFF;
-   app_vars.stringToSend[2] = (app_vars.temp>>0)&0xFF;
+/* *******************************************************
+   make page 62~255 becoming written protection by 
+   setting WRP3 as WRP3_VALUE or non written protection
+   by setting nWRP3_VALUE 
+   *******************************************************/
+   flash_erase_optByte();
+   //if you want to add written protection on page 62~255, replace 0xFF by 0x7F
+   status = flash_write_optByte(WRP3_ADDRESS,0xFF);
    
-   app_vars.temp = flash_read(ID_ADDRESS+2);
-   app_vars.stringToSend[3] = (app_vars.temp>>8)&0xFF;
-   app_vars.stringToSend[4] = (app_vars.temp>>0)&0xFF;
-   
-   app_vars.temp = flash_read(ID_ADDRESS+4);
-   app_vars.stringToSend[5] = (app_vars.temp>>8)&0xFF;
-   app_vars.stringToSend[6] = (app_vars.temp>>0)&0xFF;
-   
-   app_vars.temp = flash_read(ID_ADDRESS+6);
-   app_vars.stringToSend[7] = (app_vars.temp>>8)&0xFF;
-   app_vars.stringToSend[8] = (app_vars.temp>>0)&0xFF;
-
-   app_vars.stringToSend[9] = '~';
-   
-   leds_all_off();
-   
-      // send stringToSend over UART
-   app_vars.lastTxByteIndex = 0;
-   uart_writeByte(app_vars.stringToSend[app_vars.lastTxByteIndex]);
+   /******************************************************
+    if non-written protection, write EUI64 to page 255, 
+    then make the page written protection
+   ********************************************************/
+   // checking status of page 62~255
+   if(flash_read_optByte(WRP3_ADDRESS)&0x80)
+   {
+      // no written protection
+      flash_erasePage(PAGE255_ADDRESS);
+      flash_write(ID_ADDRESS,  HEADBYTE_FIR);
+      flash_write(ID_ADDRESS+2,HEADBYTE_SEC);
+      flash_write(ID_ADDRESS+4,HEADBYTE_THR);
+      flash_write(ID_ADDRESS+6,HEADBYTE_FOU);
+      // make page 62~255 written protection
+      flash_erase_optByte();
+      status = flash_write_optByte(WRP3_ADDRESS,0x7F);
+      // check writing status
+      if(status == 0x04)   leds_sync_on();
+   }
+   else
+   {
+     leds_error_on();
+   }
    
    while (1) {
-     //board_sleep();
+     board_sleep();
    }
-}
-
-//=========================== callbacks =======================================
-
-void cb_uartTxDone() {
-   app_vars.lastTxByteIndex++;
-   if (app_vars.lastTxByteIndex<sizeof(app_vars.stringToSend)) {
-      uart_writeByte(app_vars.stringToSend[app_vars.lastTxByteIndex]);
-   }
-}
-
-void cb_uartRxCb() {
-   uint8_t byte;
-   
-   // toggle LED
-   leds_error_toggle();
-   
-   // read received byte
-   byte = uart_readByte();
-   
-   // echo that byte over serial
-   uart_writeByte(byte);
 }
