@@ -94,7 +94,7 @@ void iphc_init() {
    }
 }
 
-void iphc_sendDone(OpenQueueEntry_t* msg, error_t error) {
+void iphc_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
    msg->owner = COMPONENT_IPHC;
    openqueue_freePacketBuffer(msg);
 }

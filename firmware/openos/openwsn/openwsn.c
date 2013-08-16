@@ -32,9 +32,9 @@
 #include "openudp.h"
 #include "opencoap.h"
 //-- app (common)
-#include "rreg.h"
-#include "rwellknown.h"
-#include "rinfo.h"
+//#include "rreg.h"
+//#include "rwellknown.h"
+//#include "rinfo.h"
 //===== applications
 //-- TCP
 #include "tcpecho.h"
@@ -56,7 +56,7 @@
 //#include "rrube.h"
 //#include "rxl1.h"
 //#include "layerdebug.h"
-#include "r6tus.h"
+//#include "r6tus.h"
 //-- misc
 //#include "heli.h"
 //#include "imu.h"
@@ -101,8 +101,8 @@ void openwsn_init() {
    opencoap_init();    // initialize before any of the CoAP applications
    //-- app (common)
  //  rreg_init();
-   rwellknown_init();
-   rinfo_init();
+//   rwellknown_init();
+//   rinfo_init();
    
    //===== applications
    //-- TCP
@@ -125,7 +125,7 @@ void openwsn_init() {
    //rrube_init();
    //rxl1_init();
    //layerdebug_init();
-   r6tus_init();
+//   r6tus_init();
    //-- misc
    //heli_init();
    //imu_init();
