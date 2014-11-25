@@ -45,7 +45,7 @@ void      forwarding_createRplOption(
 /**
 \brief Initialize this module.
 */
-void forwarding_init() {
+void forwarding_init(void) {
 }
 
 /**

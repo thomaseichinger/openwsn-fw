@@ -56,7 +56,7 @@ void inputHdlcClose(void);
 
 //=========================== public ==========================================
 
-void openserial_init() {
+void openserial_init(void) {
    uint16_t crc;
    
    // reset variable
@@ -238,7 +238,7 @@ void openserial_board_reset_cb(opentimer_id_t id) {
    board_reset();
 }
 
-uint8_t openserial_getNumDataBytes() {
+uint8_t openserial_getNumDataBytes(void) {
    uint8_t inputBufFill;
    INTERRUPT_DECLARATION();
    
@@ -271,7 +271,7 @@ uint8_t openserial_getInputBuffer(uint8_t* bufferToWrite, uint8_t maxNumBytes) {
    return numBytesWritten;
 }
 
-void openserial_startInput() {
+void openserial_startInput(void) {
    INTERRUPT_DECLARATION();
    
    if (openserial_vars.inputBufFill>0) {
@@ -303,7 +303,7 @@ void openserial_startInput() {
    ENABLE_INTERRUPTS();
 }
 
-void openserial_startOutput() {
+void openserial_startOutput(void) {
    //schedule a task to get new status in the output buffer
    uint8_t debugPrintCounter;
    
@@ -387,7 +387,7 @@ void openserial_startOutput() {
    ENABLE_INTERRUPTS();
 }
 
-void openserial_stop() {
+void openserial_stop(void) {
    uint8_t inputBufFill;
    uint8_t cmdByte;
    bool busyReceiving;
@@ -572,7 +572,7 @@ status information about several modules in the OpenWSN stack.
 
 \returns TRUE if this function printed something, FALSE otherwise.
 */
-bool debugPrint_outBufferIndexes() {
+bool debugPrint_outBufferIndexes(void) {
    uint16_t temp_buffer[2];
    INTERRUPT_DECLARATION();
    DISABLE_INTERRUPTS();
@@ -590,7 +590,7 @@ bool debugPrint_outBufferIndexes() {
 /**
 \brief Start an HDLC frame in the output buffer.
 */
-port_INLINE void outputHdlcOpen() {
+port_INLINE void outputHdlcOpen(void) {
    // initialize the value of the CRC
    openserial_vars.outputCrc                          = HDLC_CRCINIT;
    
@@ -616,7 +616,7 @@ port_INLINE void outputHdlcWrite(uint8_t b) {
 /**
 \brief Finalize the outgoing HDLC frame.
 */
-port_INLINE void outputHdlcClose() {
+port_INLINE void outputHdlcClose(void) {
    uint16_t   finalCrc;
     
    // finalize the calculation of the CRC
@@ -635,7 +635,7 @@ port_INLINE void outputHdlcClose() {
 /**
 \brief Start an HDLC frame in the input buffer.
 */
-port_INLINE void inputHdlcOpen() {
+port_INLINE void inputHdlcOpen(void) {
    // reset the input buffer index
    openserial_vars.inputBufFill                       = 0;
    
@@ -665,7 +665,7 @@ port_INLINE void inputHdlcWrite(uint8_t b) {
 /**
 \brief Finalize the incoming HDLC frame.
 */
-port_INLINE void inputHdlcClose() {
+port_INLINE void inputHdlcClose(void) {
    
    // verify the validity of the frame
    if (openserial_vars.inputCrc==HDLC_CRCGOOD) {
@@ -684,7 +684,7 @@ port_INLINE void inputHdlcClose() {
 //=========================== interrupt handlers ==============================
 
 //executed in ISR, called from scheduler.c
-void isr_openserial_tx() {
+void isr_openserial_tx(void) {
    switch (openserial_vars.mode) {
       case MODE_INPUT:
          openserial_vars.reqFrameIdx++;
@@ -707,7 +707,7 @@ void isr_openserial_tx() {
 }
 
 // executed in ISR, called from scheduler.c
-void isr_openserial_rx() {
+void isr_openserial_rx(void) {
    uint8_t rxbyte;
    uint8_t inputBufFill;
    
