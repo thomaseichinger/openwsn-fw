@@ -150,6 +150,14 @@ enum ieee154e_atomicdurations_enum {
    TsShortGT                 =   16,                  //   500us
 #endif
    TsSlotDuration            =  PORT_TsSlotDuration,  // 10000us
+
+//    TsTxOffset                =  4000,                  //  4000us
+//    TsLongGT                  =  1300,                  //  1300us
+//    TsTxAckDelay              =  4606,                  //  4606us
+//    TsShortGT                 =   500,                  //   500us
+//    TsSlotDuration            =  PORT_TsSlotDuration,  // 15000us
+// >>>>>>> fixes to RIOT adaption
+
    // execution speed related
    maxTxDataPrepare          =  PORT_maxTxDataPrepare,
    maxRxAckPrepare           =  PORT_maxRxAckPrepare,
@@ -168,6 +176,11 @@ enum ieee154e_atomicdurations_enum {
    wdDataDuration            =  164,                  //  5000us (measured 4280us with max payload)
    wdAckDuration             =   98,                  //  3000us (measured 1000us)
 #endif
+
+//    wdRadioTx                 =   1000,                  //  1000us (needs to be >delayTx)
+//    wdDataDuration            =  5000,                  //  5000us (measured 4280us with max payload)
+//    wdAckDuration             =   3000,                  //  3000us (measured 1000us)
+// >>>>>>> fixes to RIOT adaption
 };
 
 //shift of bytes in the linkOption bitmap: draft-ietf-6tisch-minimal-10.txt: page 6

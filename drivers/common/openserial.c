@@ -220,17 +220,10 @@ owerror_t openserial_printCritical(uint8_t calling_component, uint8_t error_code
    // blink error LED, this is serious
    // leds_error_blink();
    
-<<<<<<< HEAD
-   // schedule for the mote to reboot in 10s
-   opentimers_start(10000,
-                    TIMER_ONESHOT,TIME_MS,
-                    openserial_board_reset_cb);
-=======
    // // schedule for the mote to reboot in 10s
    // opentimers_start(10000,
    //                  TIMER_ONESHOT,TIME_MS,
    //                  board_reset);
->>>>>>> provide openserial dummies
    
    return openserial_printInfoErrorCritical(
       SERFRAME_MOTE2PC_CRITICAL,
