@@ -58,7 +58,7 @@ void schedule_init(void) {
 /**
 \brief Starting the DAGroot schedule propagation.
 */
-void schedule_startDAGroot() {
+void schedule_startDAGroot(void) {
    slotOffset_t    start_slotOffset;
    slotOffset_t    running_slotOffset;
    open_addr_t     temp_neighbor;
