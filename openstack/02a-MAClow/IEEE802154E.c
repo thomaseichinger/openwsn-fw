@@ -882,7 +882,8 @@ port_INLINE void activity_ti1ORri1(void) {
             if ((ieee154e_vars.dataToSend==NULL) && (cellType==CELLTYPE_TXRX)) {
                couldSendEB=TRUE;
                // look for an EB packet in the queue
-               ieee154e_vars.dataToSend = openqueue_macGetEBPacket();
+               /* undefined reference!!! */
+               // ieee154e_vars.dataToSend = openqueue_macGetEBPacket();
             }
          }
          if (ieee154e_vars.dataToSend==NULL) {
