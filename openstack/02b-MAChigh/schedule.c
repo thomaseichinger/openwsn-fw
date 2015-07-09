@@ -252,7 +252,7 @@ void  schedule_getSlotInfo(
 
 \param[out] maximum number of active slots
 */
-uint16_t  schedule_getMaxActiveSlots() {
+uint16_t  schedule_getMaxActiveSlots(void) {
    return schedule_vars.maxActiveSlots;
 }
 
@@ -451,7 +451,7 @@ bool schedule_isSlotOffsetAvailable(uint16_t slotOffset){
    return TRUE;
 }
 
-scheduleEntry_t* schedule_statistic_poorLinkQuality(){
+scheduleEntry_t* schedule_statistic_poorLinkQuality(void) {
    scheduleEntry_t* scheduleWalker;
    
    INTERRUPT_DECLARATION();
@@ -543,7 +543,7 @@ frameLength_t schedule_getFrameLength(void) {
 
 \returns The frame handle.
 */
-uint8_t schedule_getFrameHandle() {
+uint8_t schedule_getFrameHandle(void) {
    uint8_t returnVal;
    
    INTERRUPT_DECLARATION();
@@ -561,7 +561,7 @@ uint8_t schedule_getFrameHandle() {
 
 \returns The frame number.
 */
-uint8_t schedule_getFrameNumber() {
+uint8_t schedule_getFrameNumber(void) {
    uint8_t returnVal;
    
    INTERRUPT_DECLARATION();

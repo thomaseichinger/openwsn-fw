@@ -1789,7 +1789,7 @@ port_INLINE void ieee154e_getAsn(uint8_t* array) {
    array[4]         =  ieee154e_vars.asn.byte4;
 }
 
-port_INLINE uint16_t ieee154e_getTimeCorrection() {
+port_INLINE uint16_t ieee154e_getTimeCorrection(void) {
     int16_t returnVal;
     
     returnVal = (uint16_t)(ieee154e_vars.timeCorrection);
@@ -1847,7 +1847,7 @@ port_INLINE void asnStoreFromEB(uint8_t* asn) {
    ieee154e_vars.asn.byte4        =     asn[4];
 }
 
-port_INLINE void ieee154e_syncSlotOffset() {
+port_INLINE void ieee154e_syncSlotOffset(void) {
    frameLength_t frameLength;
    uint32_t slotOffset;
    

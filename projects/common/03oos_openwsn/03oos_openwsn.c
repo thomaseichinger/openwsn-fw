@@ -17,17 +17,38 @@
 #define ENABLE_DEBUG (0)
 #include "debug.h"
 
-static char openwsn_stack[KERNEL_CONF_STACKSIZE_MAIN];
-int openwsn_pid = -1;
+static char openwsn_stack[THREAD_STACKSIZE_DEFAULT];
+kernel_pid_t openwsn_pid = -1;
+uint8_t owsn_mop;
 
 void openwsn_init(void);
 void* openwsn_start(void *arg);
 
-void openwsn_start_thread(void) {
+int openwsn_start_thread(int argc, char** argv) {
     DEBUG("%s\n",__PRETTY_FUNCTION__);
-    openwsn_pid = thread_create(openwsn_stack, KERNEL_CONF_STACKSIZE_MAIN,
-                                PRIORITY_OPENWSN-2, CREATE_STACKTEST,
-                                openwsn_start, NULL, "openwsn thread");
+    if (argc < 2) {
+        printf("usage: %s (r|n)\n", argv[0]);
+        puts("\tr\tinitialise as DAGROOT.");
+        puts("\tn\tinitialise as node.");
+        return -1;
+    }
+
+    char command = argv[1][0];
+    if (command == 'r') {
+        printf("Starting OpenWSN as root ... ");
+        owsn_mop = 1;
+        openwsn_pid = thread_create(openwsn_stack, THREAD_STACKSIZE_DEFAULT,
+                                    PRIORITY_OPENWSN, CREATE_STACKTEST,
+                                    openwsn_start, (void*)&owsn_mop, "openwsn thread");
+    }
+    else {
+        printf("Starting OpenWSN as node ... ");
+        owsn_mop = 0;
+        openwsn_pid = thread_create(openwsn_stack, THREAD_STACKSIZE_DEFAULT,
+                                    PRIORITY_OPENWSN, CREATE_STACKTEST,
+                                    openwsn_start, (void*)&owsn_mop, "openwsn thread");
+    }
+    return 0;
 }
 
 void* openwsn_start(void *arg) {
@@ -36,7 +57,7 @@ void* openwsn_start(void *arg) {
     leds_all_off();
     board_init_ow();
     scheduler_init();
-    openstack_init();
+    openstack_init(*((uint8_t*)arg));
     puts("OpenWSN thread started.");
     scheduler_start();
     return NULL;
@@ -45,14 +66,14 @@ void* openwsn_start(void *arg) {
 int mote_main(void) {
 
    // initialize
-   board_init();
-   CRYPTO_ENGINE.init();
-   scheduler_init();
-   openstack_init();
+   // board_init();
+   // CRYPTO_ENGINE.init();
+   // scheduler_init();
+   // openstack_init();
 
    // indicate
 
    // start
-   scheduler_start();
+   // scheduler_start();
    return 0; // this line should never be reached
 }

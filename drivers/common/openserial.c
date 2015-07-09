@@ -721,11 +721,11 @@ void isr_openserial_rx(void) {
    //keep lenght
    inputBufFill=openserial_vars.inputBufFill;
    
-   if        (
-                openserial_vars.busyReceiving==FALSE  &&
-                openserial_vars.lastRxByte==HDLC_FLAG &&
-                rxbyte!=HDLC_FLAG
-              ) {
+   // if        (
+   //             openserial_vars.busyReceiving==FALSE  &&
+   //             openserial_vars.lastRxByte==HDLC_FLAG &&
+   //             rxbyte!=HDLC_FLAG
+   //           ) {
       // start of frame
    //    // I'm now receiving
    //    openserial_vars.busyReceiving         = TRUE;
@@ -779,14 +779,14 @@ void isr_openserial_rx(void) {
 //======== SERIAL ECHO =============
 
 void openserial_echo(uint8_t* buf, uint8_t bufLen){
-   // INTERRUPT_DECLARATION();
+   INTERRUPT_DECLARATION();
    // // echo back what you received
    // openserial_printData(
    //    buf,
    //    bufLen
    // );
 
-   //  DISABLE_INTERRUPTS();
+   DISABLE_INTERRUPTS();
    //  openserial_vars.inputBufFill = 0;
-   //  ENABLE_INTERRUPTS();
+   ENABLE_INTERRUPTS();
 }
