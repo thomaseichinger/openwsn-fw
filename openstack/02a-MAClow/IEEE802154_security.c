@@ -448,6 +448,9 @@ void IEEE802154_security_retrieveAuxiliarySecurityHeader(OpenQueueEntry_t*      
       if (frameCnt_Size == 5){ //we have the ASN as the frame counter
          l2_frameCounter.byte4 = receivedASN[4];
       }
+      else {
+         l2_frameCounter.byte4 = 0;
+      }
 
       if (l2_frameCounter.byte4 == 0xff){ //frame counter overflow
          openserial_printError(COMPONENT_SECURITY,ERR_SECURITY,
@@ -652,7 +655,7 @@ owerror_t IEEE802154_security_incomingFrame(OpenQueueEntry_t* msg){
 */
 uint8_t IEEE802154_security_authLengthChecking(uint8_t securityLevel){
 
-   uint8_t authlen;
+   uint8_t authlen = 0;
    switch (securityLevel) {
       case IEEE154_ASH_SLF_TYPE_NOSEC:
       case IEEE154_ASH_SLF_TYPE_ENC:
@@ -681,7 +684,7 @@ uint8_t IEEE802154_security_authLengthChecking(uint8_t securityLevel){
 uint8_t IEEE802154_security_auxLengthChecking(uint8_t KeyIdMode, 
                                              uint8_t frameCounterSuppression, 
                                              uint8_t frameCounterSize){
-   uint8_t auxilary_len;
+   uint8_t auxilary_len = 0;
    uint8_t frameCntLength;
    if (frameCounterSuppression == IEEE154_ASH_FRAMECOUNTER_PRESENT){
       if (frameCounterSize == 4){

@@ -107,7 +107,7 @@ owerror_t openserial_printStatus(uint8_t statusElement,uint8_t* buffer, uint8_t 
    // }
    // outputHdlcClose();
    // ENABLE_INTERRUPTS();
-   
+
    return E_SUCCESS;
 }
 
@@ -134,7 +134,7 @@ owerror_t openserial_printInfoErrorCritical(
    // outputHdlcWrite((uint8_t) (arg2 & 0x00ff));
    // outputHdlcClose();
    // ENABLE_INTERRUPTS();
-   
+
    return E_SUCCESS;
 }
 
@@ -162,14 +162,14 @@ owerror_t openserial_printData(uint8_t* buffer, uint8_t length) {
    // }
    // outputHdlcClose();
    // ENABLE_INTERRUPTS();
-   
+
    return E_SUCCESS;
 }
 
 owerror_t openserial_printPacket(uint8_t* buffer, uint8_t length, uint8_t channel) {
    uint8_t  i;
    INTERRUPT_DECLARATION();
-   
+
    DISABLE_INTERRUPTS();
    openserial_vars.outputBufFilled  = TRUE;
    outputHdlcOpen();
@@ -181,9 +181,9 @@ owerror_t openserial_printPacket(uint8_t* buffer, uint8_t length, uint8_t channe
    }
    outputHdlcWrite(channel);
    outputHdlcClose();
-   
+
    ENABLE_INTERRUPTS();
-   
+
    return E_SUCCESS;
 }
 
@@ -204,7 +204,7 @@ owerror_t openserial_printError(uint8_t calling_component, uint8_t error_code,
                               errorparameter_t arg2) {
    // blink error LED, this is serious
    // leds_error_toggle();
-   
+
    return openserial_printInfoErrorCritical(
       SERFRAME_MOTE2PC_ERROR,
       calling_component,
@@ -219,12 +219,12 @@ owerror_t openserial_printCritical(uint8_t calling_component, uint8_t error_code
                               errorparameter_t arg2) {
    // blink error LED, this is serious
    // leds_error_blink();
-   
+
    // // schedule for the mote to reboot in 10s
    // opentimers_start(10000,
    //                  TIMER_ONESHOT,TIME_MS,
    //                  board_reset);
-   
+
    return openserial_printInfoErrorCritical(
       SERFRAME_MOTE2PC_CRITICAL,
       calling_component,
@@ -239,18 +239,18 @@ void openserial_board_reset_cb(opentimer_id_t id) {
 }
 
 uint8_t openserial_getNumDataBytes(void) {
-   uint8_t inputBufFill;
+   // uint8_t inputBufFill;
    // INTERRUPT_DECLARATION();
-   
+
    // DISABLE_INTERRUPTS();
    // inputBufFill = openserial_vars.inputBufFill;
    // ENABLE_INTERRUPTS();
 
-   return inputBufFill-1; // removing the command byte
+   return 1;//inputBufFill-1; // removing the command byte
 }
 
 uint8_t openserial_getInputBuffer(uint8_t* bufferToWrite, uint8_t maxNumBytes) {
-   uint8_t numBytesWritten;
+   uint8_t numBytesWritten = 0;
    // uint8_t inputBufFill;
    // INTERRUPT_DECLARATION();
 
@@ -267,7 +267,7 @@ uint8_t openserial_getInputBuffer(uint8_t* bufferToWrite, uint8_t maxNumBytes) {
    //    numBytesWritten = inputBufFill-1;
    //    memcpy(bufferToWrite,&(openserial_vars.inputBuf[1]),numBytesWritten);
    // }
-   
+
    return numBytesWritten;
 }
 
@@ -458,9 +458,9 @@ void openserial_goldenImageCommands(void){
 #endif
    uint8_t  commandId;
    uint8_t  commandLen;
-   uint8_t  comandParam_8;
-   uint16_t comandParam_16;
-   
+   uint8_t  comandParam_8 = 0;
+   uint16_t comandParam_16 = 0;
+
    numDataBytes = openserial_getNumDataBytes();
    //copying the buffer
    openserial_getInputBuffer(&(input_buffer[0]),numDataBytes);
@@ -473,8 +473,8 @@ void openserial_goldenImageCommands(void){
       // log this info and return
       return;
    }
-   
-#ifdef GOLDEN_IMAGE_ROOT 
+
+#ifdef GOLDEN_IMAGE_ROOT
    if ( type != GD_TYPE_ROOT ){
        // image type is wrong
        return;
@@ -488,7 +488,7 @@ void openserial_goldenImageCommands(void){
 #endif
    commandId  = openserial_vars.inputBuf[3];
    commandLen = openserial_vars.inputBuf[4];
-   
+
    if (commandLen>2 || commandLen == 0) {
        // the max command Len is 2, except ping commands
        return;
@@ -498,10 +498,10 @@ void openserial_goldenImageCommands(void){
        } else {
            // commandLen == 2
            comandParam_16 = (openserial_vars.inputBuf[5]      & 0x00ff) | \
-                            ((openserial_vars.inputBuf[6]<<8) & 0xff00); 
+                            ((openserial_vars.inputBuf[6]<<8) & 0xff00);
        }
    }
-   
+
    switch(commandId) {
        case COMMAND_SET_EBPERIOD:
            sixtop_setEBPeriod(comandParam_8); // one byte, in seconds
@@ -538,7 +538,7 @@ void openserial_goldenImageCommands(void){
                if (comandParam_8 == 0) {
                   ieee154e_setIsSecurityEnabled(FALSE);
                } else {
-                   // security only can be 1 or 0 
+                   // security only can be 1 or 0
                    break;
                }
            }
@@ -593,7 +593,7 @@ bool debugPrint_outBufferIndexes(void) {
 port_INLINE void outputHdlcOpen(void) {
    // // initialize the value of the CRC
    // openserial_vars.outputCrc                          = HDLC_CRCINIT;
-   
+
    // // write the opening HDLC flag
    // openserial_vars.outputBuf[openserial_vars.outputBufIdxW++]     = HDLC_FLAG;
 }
@@ -601,31 +601,31 @@ port_INLINE void outputHdlcOpen(void) {
 \brief Add a byte to the outgoing HDLC frame being built.
 */
 port_INLINE void outputHdlcWrite(uint8_t b) {
-   
+
    // // iterate through CRC calculator
    // openserial_vars.outputCrc = crcIteration(openserial_vars.outputCrc,b);
-   
+
    // // add byte to buffer
    // if (b==HDLC_FLAG || b==HDLC_ESCAPE) {
    //    openserial_vars.outputBuf[openserial_vars.outputBufIdxW++]  = HDLC_ESCAPE;
    //    b                                               = b^HDLC_ESCAPE_MASK;
    // }
    // openserial_vars.outputBuf[openserial_vars.outputBufIdxW++]     = b;
-   
+
 }
 /**
 \brief Finalize the outgoing HDLC frame.
 */
 port_INLINE void outputHdlcClose(void) {
    // uint16_t   finalCrc;
-    
+
    // // finalize the calculation of the CRC
    // finalCrc   = ~openserial_vars.outputCrc;
-   
+
    // // write the CRC value
    // outputHdlcWrite((finalCrc>>0)&0xff);
    // outputHdlcWrite((finalCrc>>8)&0xff);
-   
+
    // // write the closing HDLC flag
    // openserial_vars.outputBuf[openserial_vars.outputBufIdxW++]   = HDLC_FLAG;
 }
@@ -638,7 +638,7 @@ port_INLINE void outputHdlcClose(void) {
 port_INLINE void inputHdlcOpen(void) {
    // // reset the input buffer index
    // openserial_vars.inputBufFill                       = 0;
-   
+
    // // initialize the value of the CRC
    // openserial_vars.inputCrc                           = HDLC_CRCINIT;
 }
@@ -653,11 +653,11 @@ port_INLINE void inputHdlcWrite(uint8_t b) {
    //       b                             = b^HDLC_ESCAPE_MASK;
    //       openserial_vars.inputEscaping = FALSE;
    //    }
-      
+
    //    // add byte to input buffer
    //    openserial_vars.inputBuf[openserial_vars.inputBufFill] = b;
    //    openserial_vars.inputBufFill++;
-      
+
    //    // iterate through CRC calculator
    //    openserial_vars.inputCrc = crcIteration(openserial_vars.inputCrc,b);
    // }
@@ -666,16 +666,16 @@ port_INLINE void inputHdlcWrite(uint8_t b) {
 \brief Finalize the incoming HDLC frame.
 */
 port_INLINE void inputHdlcClose(void) {
-   
+
    // // verify the validity of the frame
    // if (openserial_vars.inputCrc==HDLC_CRCGOOD) {
    //    // the CRC is correct
-      
+
    //    // remove the CRC from the input buffer
    //    openserial_vars.inputBufFill    -= 2;
    // } else {
    //    // the CRC is incorrect
-      
+
    //    // drop the incoming fram
    //    openserial_vars.inputBufFill     = 0;
    // }
@@ -708,19 +708,19 @@ void isr_openserial_tx(void) {
 
 // executed in ISR, called from scheduler.c
 void isr_openserial_rx(void) {
-   uint8_t rxbyte;
-   uint8_t inputBufFill;
-   
+   // uint8_t rxbyte;
+   // uint8_t inputBufFill;
+
    // stop if I'm not in input mode
    if (openserial_vars.mode!=MODE_INPUT) {
       return;
    }
-   
+
    // read byte just received
-   rxbyte = uart_readByte();
+   // rxbyte = uart_readByte();
    //keep lenght
-   inputBufFill=openserial_vars.inputBufFill;
-   
+   // inputBufFill=openserial_vars.inputBufFill;
+
    // if        (
    //             openserial_vars.busyReceiving==FALSE  &&
    //             openserial_vars.lastRxByte==HDLC_FLAG &&
@@ -729,10 +729,10 @@ void isr_openserial_rx(void) {
       // start of frame
    //    // I'm now receiving
    //    openserial_vars.busyReceiving         = TRUE;
-      
+
    //    // create the HDLC frame
    //    inputHdlcOpen();
-      
+
    //    // add the byte just received
    //    inputHdlcWrite(rxbyte);
    // } else if (
@@ -740,7 +740,7 @@ void isr_openserial_rx(void) {
    //              rxbyte!=HDLC_FLAG
    //           ) {
    //    // middle of frame
-      
+
    //    // add the byte just received
    //    inputHdlcWrite(rxbyte);
    //    if (openserial_vars.inputBufFill+1>SERIAL_INPUT_BUFFER_SIZE){
@@ -757,22 +757,22 @@ void isr_openserial_rx(void) {
    //              rxbyte==HDLC_FLAG
    //            ) {
    //       // end of frame
-         
+
    //       // finalize the HDLC frame
    //       inputHdlcClose();
-         
+
    //       if (openserial_vars.inputBufFill==0){
    //          // invalid HDLC frame
    //          openserial_printError(COMPONENT_OPENSERIAL,ERR_WRONG_CRC_INPUT,
    //                                (errorparameter_t)inputBufFill,
    //                                (errorparameter_t)0);
-         
+
    //       }
-         
+
    //       openserial_vars.busyReceiving      = FALSE;
    //       openserial_stop();
    // }
-   
+
    // openserial_vars.lastRxByte = rxbyte;
 }
 

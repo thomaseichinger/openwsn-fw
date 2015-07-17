@@ -62,10 +62,10 @@ owerror_t iphc_sendFromForwarding(
    open_addr_t  temp_dest_prefix;
    open_addr_t  temp_dest_mac64b;
    open_addr_t* p_dest;
-   open_addr_t* p_src;  
+   open_addr_t* p_src =0;
    open_addr_t  temp_src_prefix;
    open_addr_t  temp_src_mac64b; 
-   uint8_t      sam;
+   uint8_t      sam = 0;
    uint8_t      m;
    uint8_t      dam;
    uint8_t      nh;

@@ -20,7 +20,7 @@ void uecho_init(void) {
 }
 
 void uecho_receive(OpenQueueEntry_t* request) {
-   uint16_t          temp_l4_destination_port;
+   // uint16_t          temp_l4_destination_port;
    OpenQueueEntry_t* reply;
 
    reply = openqueue_getFreePacketBuffer(COMPONENT_UECHO);

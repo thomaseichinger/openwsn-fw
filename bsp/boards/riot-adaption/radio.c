@@ -46,8 +46,6 @@ void event_cb(ng_netdev_event_t type, void *arg);
 
 void radio_init(void) {
    DEBUG("%s\n", __PRETTY_FUNCTION__);
-   // at86rf231_initialize(&at86rf231_netdev);
-   // at86rf231_set_monitor(1);
    ng_at86rf2xx_init(&radio, AT86RF231_SPI, AT86RF231_SPI_CLK,
                      AT86RF231_CS, AT86RF231_INT,
                      AT86RF231_SLEEP, AT86RF231_RESET);
@@ -144,7 +142,7 @@ void radio_loadPacket(uint8_t* packet, uint8_t len) {
    pkt->data = packet;
    pkt->size = len;
    // load packet in TXFIFO
-   radio.driver->send_data(&radio, pkt);
+   radio.driver->send_data((ng_netdev_t *)&radio, pkt);
 
    // change state
    radio_vars.state = RADIOSTATE_PACKET_LOADED;

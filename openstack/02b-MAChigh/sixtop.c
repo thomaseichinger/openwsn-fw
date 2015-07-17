@@ -234,6 +234,7 @@ void sixtop_addCells(open_addr_t* neighbor, uint16_t numCells){
            scheduleID_subId = MLME_IE_SUBID_SCHEDULE;
        } else {
            // any other handler
+            scheduleID_subId = 0;
        }
    }
    len += processIE_prependScheduleIE(pkt,type,frameID,flag,cellList,scheduleID_subId);
@@ -326,6 +327,7 @@ void sixtop_removeCell(open_addr_t* neighbor){
            scheduleIE_subId = MLME_IE_SUBID_SCHEDULE;
        } else {
            // if there are anyother handler
+            scheduleIE_subId = 0;
        }
        
    }
@@ -416,6 +418,7 @@ void sixtop_removeCellByInfo(open_addr_t*  neighbor,cellInfo_ht* cellInfo){
            scheduleIE_subId = MLME_IE_SUBID_SCHEDULE;
        } else {
            // if there are anyother handler
+           scheduleIE_subId = 0;
        }
        
    }
@@ -1257,6 +1260,7 @@ void sixtop_linkResponse(
            scheduleID_subId = MLME_IE_SUBID_SCHEDULE;
        } else {
            // any other handler
+            scheduleID_subId = 0;
        }
    }
    // set SubFrameAndLinkIE
