@@ -11,6 +11,11 @@
 #include "leds.h"
 
 #include "thread.h"
+#include "msg.h"
+#include "ng_at86rf2xx.h"
+#include "net/ng_pktbuf.h"
+#include "net/ng_netbase.h"
+
 
 #define ENABLE_DEBUG (0)
 #include "debug.h"
@@ -19,6 +24,7 @@
 
 scheduler_vars_t scheduler_vars;
 scheduler_dbg_t  scheduler_dbg;
+extern ng_at86rf2xx_t radio;
 
 //=========================== prototypes ======================================
 
@@ -37,6 +43,14 @@ void scheduler_init(void) {
 
 void scheduler_start(void) {
    taskList_item_t* pThisTask;
+   ng_netdev_t *dev = (ng_netdev_t *)&radio;
+   msg_t msg, reply, msg_queue[8];
+
+   /* setup the MAC layers message queue */
+   msg_init_queue(msg_queue, 8);
+   /* save the PID to the device descriptor and register the device */
+   dev->mac_pid = thread_getpid();
+
    while (1) {
       while(scheduler_vars.task_list!=NULL) {
          // there is still at least one task in the linked-list of tasks
@@ -56,6 +70,14 @@ void scheduler_start(void) {
          pThisTask->next          = NULL;
          scheduler_dbg.numTasksCur--;
       }
+
+      msg_try_receive(&msg);
+
+      if (msg.type == NG_NETDEV_MSG_TYPE_EVENT) {
+         DEBUG("tisch_mac: NG_NETDEV_MSG_TYPE_EVENT received\n");
+         dev->driver->isr_event(dev, msg.content.value);
+      }
+
       debugpins_task_clr();
       // board_sleep();
       thread_yield();

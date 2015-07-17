@@ -26,7 +26,7 @@ typedef struct {
 radio_vars_t radio_vars;
 
 /* RIOT's network device */
-static ng_at86rf2xx_t radio;
+ng_at86rf2xx_t radio;
 static ng_pktsnip_t *tmp_pkt;
 
 //=========================== prototypes ======================================
