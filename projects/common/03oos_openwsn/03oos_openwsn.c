@@ -24,16 +24,16 @@ uint8_t owsn_mop;
 void openwsn_init(void);
 void* openwsn_start(void *arg);
 
-int openwsn_start_thread(int argc, char** argv) {
+int openwsn_start_thread(char command) {
     DEBUG("%s\n",__PRETTY_FUNCTION__);
-    if (argc < 2) {
-        printf("usage: %s (r|n)\n", argv[0]);
-        puts("\tr\tinitialise as DAGROOT.");
-        puts("\tn\tinitialise as node.");
-        return -1;
-    }
+    // if (argc < 2) {
+    //     printf("usage: %s (r|n)\n", argv[0]);
+    //     puts("\tr\tinitialise as DAGROOT.");
+    //     puts("\tn\tinitialise as node.");
+    //     return -1;
+    // }
 
-    char command = argv[1][0];
+    // char command = argv[1][0];
     if (command == 'r') {
         printf("Starting OpenWSN as root ... ");
         owsn_mop = 1;
