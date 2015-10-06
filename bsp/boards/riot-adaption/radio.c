@@ -50,7 +50,9 @@ void radio_init(void) {
    ng_at86rf2xx_init(&radio, AT86RF231_SPI, AT86RF231_SPI_CLK,
                      AT86RF231_CS, AT86RF231_INT,
                      AT86RF231_SLEEP, AT86RF231_RESET);
-   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_PRELOADING, (void *)NETCONF_ENABLE, sizeof(ng_netconf_enable_t));
+   ng_netconf_enable_t enable = NETCONF_ENABLE;
+   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_PRELOADING, (void *)enable, sizeof(ng_netconf_enable_t));
+   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_RAWMODE, (void *)enable, sizeof(ng_netconf_enable_t));
    radio.driver->add_event_callback((ng_netdev_t *)&radio, event_cb);
 
 }
@@ -74,7 +76,8 @@ void radio_setEndFrameCb(radiotimer_capture_cbt cb) {
 //===== reset
 
 void radio_reset(void) {
-   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)NETCONF_STATE_RESET, sizeof(ng_netconf_state_t));
+  ng_netconf_state_t state = NETCONF_STATE_RESET;
+   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)&state, sizeof(ng_netconf_state_t));
 }
 
 //===== timer
@@ -109,7 +112,8 @@ void radio_setFrequency(uint8_t frequency) {
 }
 
 void radio_rfOn(void) {
-   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)NETCONF_STATE_IDLE, sizeof(ng_netconf_state_t));
+  ng_netconf_state_t state = NETCONF_STATE_IDLE;
+   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)&state, sizeof(ng_netconf_state_t));
 }
 
 void radio_rfOff(void) {
@@ -119,7 +123,8 @@ void radio_rfOff(void) {
 
 //    debugpins_radio_clr();
    leds_radio_off();
-   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)NETCONF_STATE_OFF, sizeof(ng_netconf_state_t));
+   ng_netconf_state_t state = NETCONF_STATE_OFF;
+   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)&state, sizeof(ng_netconf_state_t));
 //    DEBUG("step 4\n");
 //    // change state
    radio_vars.state = RADIOSTATE_RFOFF;
@@ -167,7 +172,8 @@ void radio_txNow(void) {
    radio_vars.state = RADIOSTATE_TRANSMITTING;
    leds_radio_toggle();
 
-   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)NETCONF_STATE_TX, sizeof(ng_netconf_state_t));
+   ng_netconf_state_t state = NETCONF_STATE_TX;
+   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)state, sizeof(ng_netconf_state_t));
 
    leds_radio_toggle();
    // The AT86RF231 does not generate an interrupt when the radio transmits the
@@ -191,7 +197,8 @@ void radio_rxEnable(void) {
    // change state
    radio_vars.state = RADIOSTATE_ENABLING_RX;
 
-   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)NETCONF_STATE_IDLE, sizeof(ng_netconf_state_t));
+   ng_netconf_state_t state = NETCONF_STATE_IDLE;
+   radio.driver->set((ng_netdev_t *)&radio, NETCONF_OPT_STATE, (void *)&state, sizeof(ng_netconf_state_t));
 
    leds_radio_on();
 
@@ -224,71 +231,6 @@ void radio_getReceivedFrame(uint8_t* pBufRead,
    ng_pktbuf_release(tmp_pkt);
    tmp_pkt = NULL;
 }
-
-void tisch_mac(void) {
-    ng_netdev_t *dev = (ng_netdev_t *)&radio;
-    ng_netapi_opt_t *opt;
-    int res;
-    msg_t msg, reply, msg_queue[8];
-
-    /* setup the MAC layers message queue */
-    msg_init_queue(msg_queue, 8);
-    /* save the PID to the device descriptor and register the device */
-    dev->mac_pid = thread_getpid();
-    ng_netif_add(dev->mac_pid);
-    /* register the event callback with the device driver */
-    dev->driver->add_event_callback(dev, event_cb);
-
-    /* start the event loop */
-    while (1) {
-        DEBUG("tisch_mac: waiting for incoming messages\n");
-        msg_receive(&msg);
-        /* dispatch NETDEV and NETAPI messages */
-        switch (msg.type) {
-            case NG_NETDEV_MSG_TYPE_EVENT:
-                DEBUG("tisch_mac: NG_NETDEV_MSG_TYPE_EVENT received\n");
-                dev->driver->isr_event(dev, msg.content.value);
-                break;
-            case NG_NETAPI_MSG_TYPE_SND:
-                DEBUG("tisch_mac: NG_NETAPI_MSG_TYPE_SND received\n");
-                dev->driver->send_data(dev, (ng_pktsnip_t *)msg.content.ptr);
-                break;
-            case NG_NETAPI_MSG_TYPE_SET:
-                /* TODO: filter out MAC layer options -> for now forward
-                         everything to the device driver */
-                DEBUG("tisch_mac: NG_NETAPI_MSG_TYPE_SET received\n");
-                /* read incoming options */
-                opt = (ng_netapi_opt_t *)msg.content.ptr;
-                /* set option for device driver */
-                res = dev->driver->set(dev, opt->opt, opt->data, opt->data_len);
-                DEBUG("tisch_mac: response of netdev->set: %i\n", res);
-                /* send reply to calling thread */
-                reply.type = NG_NETAPI_MSG_TYPE_ACK;
-                reply.content.value = (uint32_t)res;
-                msg_reply(&msg, &reply);
-                break;
-            case NG_NETAPI_MSG_TYPE_GET:
-                /* TODO: filter out MAC layer options -> for now forward
-                         everything to the device driver */
-                DEBUG("tisch_mac: NG_NETAPI_MSG_TYPE_GET received\n");
-                /* read incoming options */
-                opt = (ng_netapi_opt_t *)msg.content.ptr;
-                /* get option from device driver */
-                res = dev->driver->get(dev, opt->opt, opt->data, opt->data_len);
-                DEBUG("tisch_mac: response of netdev->get: %i\n", res);
-                /* send reply to calling thread */
-                reply.type = NG_NETAPI_MSG_TYPE_ACK;
-                reply.content.value = (uint32_t)res;
-                msg_reply(&msg, &reply);
-                break;
-            default:
-                DEBUG("tisch_mac: Unknown command %" PRIu16 "\n", msg.type);
-                break;
-        }
-    }
-    /* never reached */
-    return;
-  }
 
 //=========================== callbacks =======================================
 void event_cb(ng_netdev_event_t event, void *arg) {

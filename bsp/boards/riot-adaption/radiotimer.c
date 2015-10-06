@@ -16,8 +16,10 @@ On openmoteSTM32, we use RTC for the radiotimer module.
 
 #include "riot.h"
 
-#define ENABLE_DEBUG (0)
+#define ENABLE_DEBUG (1)
 #include "debug.h"
+
+#define FACTOR    50
 
 
 //=========================== variables =======================================
@@ -39,7 +41,7 @@ volatile radiotimer_vars_t radiotimer_vars;
 uint16_t current_period;
 
 //=========================== prototypes ======================================
-extern int timer_set_relative(tim_t, int channel, unsigned int rel_value);
+// extern int timer_set_relative(tim_t, int channel, unsigned int rel_value);
 //=========================== public ==========================================
 
 //===== admin
@@ -47,7 +49,6 @@ extern int timer_set_relative(tim_t, int channel, unsigned int rel_value);
 void radiotimer_init(void) {
    // clear local variables
    memset((void*)&radiotimer_vars,0,sizeof(radiotimer_vars_t));
-   current_period = 0;
 }
 
 void radiotimer_setOverflowCb(radiotimer_compare_cbt cb) {
@@ -59,59 +60,58 @@ void radiotimer_setCompareCb(radiotimer_compare_cbt cb) {
 }
 
 void radiotimer_setStartFrameCb(radiotimer_capture_cbt cb) {
+  puts("Nooooooo");
    while(1);
 }
 
 void radiotimer_setEndFrameCb(radiotimer_capture_cbt cb) {
+  puts("nOoooooo");
    while(1);
 }
 
 void radiotimer_start(PORT_RADIOTIMER_WIDTH period) {
-    DEBUG("%s\n", __PRETTY_FUNCTION__);
-    // timer_init(OWSN_TIMER, 1, &radiotimer_isr);
-    timer_set(OWSN_TIMER, 1, ((unsigned int)HWTIMER_TICKS(period)*10));
-    current_period = period;
-   radiotimer_vars.currentSlotPeriod = period;
+    DEBUG("%s %d\n", __PRETTY_FUNCTION__, period);
+    timer_init(OWSN_TIMER, 1, &radiotimer_isr);
+    timer_set(OWSN_TIMER, 1, period*FACTOR);
+    
+   radiotimer_vars.currentSlotPeriod = period*FACTOR;
    radiotimer_vars.overflowORcompare = RADIOTIMER_OVERFLOW;
 }
 
 //===== direct access
 
 PORT_RADIOTIMER_WIDTH radiotimer_getValue(void) {
-    return (PORT_RADIOTIMER_WIDTH)(HWTIMER_TICKS_TO_US(timer_read(OWSN_TIMER)));
+    DEBUG("%s %d\n", __PRETTY_FUNCTION__, timer_read(OWSN_TIMER));
+    return (PORT_RADIOTIMER_WIDTH) timer_read(OWSN_TIMER);
 }
 
 void radiotimer_setPeriod(PORT_RADIOTIMER_WIDTH period) {
-    DEBUG("%s\n", __PRETTY_FUNCTION__);
-    timer_set(OWSN_TIMER, 1, ((unsigned int)HWTIMER_TICKS(period)*10));
-    current_period = period;
-    radiotimer_vars.currentSlotPeriod = period;
+    DEBUG("%s %d\n", __PRETTY_FUNCTION__, period);
 
-    //set radiotimer irpstatus
-    radiotimer_vars.overflowORcompare = RADIOTIMER_OVERFLOW;
+    timer_set(OWSN_TIMER, 1, period*FACTOR);
+    // rtt_set_alarm(period, rtt_cmp_cb, NULL);
 }
 
 PORT_RADIOTIMER_WIDTH radiotimer_getPeriod(void) {
-    return current_period;
+    DEBUG("%s %d\n", __PRETTY_FUNCTION__, radiotimer_vars.currentSlotPeriod);
+    return radiotimer_vars.currentSlotPeriod;
 }
 
 //===== compare
 
 void radiotimer_schedule(PORT_RADIOTIMER_WIDTH offset) {
-    DEBUG("%s\n", __PRETTY_FUNCTION__);
+    DEBUG("%s %d\n", __PRETTY_FUNCTION__, offset);
     timer_irq_disable(OWSN_TIMER);
-    timer_set(OWSN_TIMER, 1, HWTIMER_TICKS(offset)*10);
+    timer_set(OWSN_TIMER, 1, offset*FACTOR);
     timer_irq_enable(OWSN_TIMER);
+    // rtt_set_alarm(offset, rtt_cmp_cb, NULL);
     //set radiotimer irpstatus
     radiotimer_vars.overflowORcompare = RADIOTIMER_COMPARE;
 }
 
 void radiotimer_cancel(void) {
     DEBUG("%s\n", __PRETTY_FUNCTION__);
-    timer_irq_disable(OWSN_TIMER);
-    // timer_clear(OWSN_TIMER, 1);
-    timer_set(OWSN_TIMER, 1, HWTIMER_TICKS(current_period)*10);
-    timer_irq_enable(OWSN_TIMER);
+    timer_reset(OWSN_TIMER);
 
     //set radiotimer irpstatus
     radiotimer_vars.overflowORcompare = RADIOTIMER_OVERFLOW;
@@ -120,14 +120,16 @@ void radiotimer_cancel(void) {
 //===== capture
 
 inline PORT_RADIOTIMER_WIDTH radiotimer_getCapturedTime(void) {
-    return (PORT_RADIOTIMER_WIDTH)(timer_read(OWSN_TIMER));
+    return timer_read(OWSN_TIMER);
 }
 
 //=========================== private =========================================
 
 //=========================== interrupt handlers ==============================
-void radiotimer_isr(void) {
+void radiotimer_isr(int c) {
+
     uint8_t taiv_temp = radiotimer_vars.overflowORcompare;
+    (void) c;
     switch (taiv_temp) {
         case RADIOTIMER_COMPARE:
             DEBUG("%s cmp\n", __PRETTY_FUNCTION__);
@@ -141,7 +143,7 @@ void radiotimer_isr(void) {
             DEBUG("%s of\n", __PRETTY_FUNCTION__);
             if (radiotimer_vars.overflow_cb!=NULL) {
                 //Wait until last write operation on RTC registers has finished
-                timer_set(OWSN_TIMER, 1, HWTIMER_TICKS(current_period)*10);
+                // timer_set(OWSN_TIMER, 1, radiotimer_vars.currentSlotPeriod);
                 // call the callback
                 radiotimer_vars.overflow_cb();
                 DEBUG("returned...\n");

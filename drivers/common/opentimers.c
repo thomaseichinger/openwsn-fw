@@ -13,7 +13,7 @@ at most MAX_NUM_TIMERS timers.
 #include "leds.h"
 
 #include "riot.h"
-#include "periph/timer.h"
+#include "hwtimer.h"
 
 //=========================== define ==========================================
 
@@ -21,6 +21,7 @@ at most MAX_NUM_TIMERS timers.
 
 opentimers_vars_t opentimers_vars;
 //uint32_t counter; //counts the elapsed time.
+int timer_id;
 
 //=========================== prototypes ======================================
 
@@ -29,14 +30,14 @@ extern void radiotimer_isr(void);
 
 //=========================== public ==========================================
 
-void timers_isr(int channel) {
-   if (channel) {
-      radiotimer_isr();
-   }
-   else {
-      opentimers_timer_callback();
-   }
-}
+// void timers_isr(int channel) {
+//    if (channel) {
+//       radiotimer_isr();
+//    }
+//    else {
+//       opentimers_timer_callback();
+//    }
+// }
 
 /**
 \brief Initialize this module.
@@ -59,7 +60,7 @@ void opentimers_init(void) {
 
    // set callback for bsp_timers module
    // bsp_timer_set_callback(opentimers_timer_callback);
-   timer_init(OWSN_TIMER, 1, &timers_isr);
+   // timer_init(OWSN_TIMER, 1, &timers_isr);
 }
 
 /**
@@ -136,12 +137,14 @@ opentimer_id_t opentimers_start(uint32_t duration, timer_type_t type, time_type_
          opentimers_vars.currentTimeout            = opentimers_vars.timersBuf[id].ticks_remaining;
          if (opentimers_vars.running==FALSE) {
             // bsp_timer_reset();
-            timer_reset(OWSN_TIMER);
-            timer_set_absolute(OWSN_TIMER, 0, 0);
-            timer_set_absolute(OWSN_TIMER, 1, 0);
+            // timer_reset(OWSN_TIMER);
+            // timer_set_absolute(OWSN_TIMER, 0, 0);
+            // timer_set_absolute(OWSN_TIMER, 1, 0);
+            hwtimer_remove(timer_id);
          }
          // bsp_timer_scheduleIn(opentimers_vars.timersBuf[id].ticks_remaining);
-         timer_set(OWSN_TIMER, 0, opentimers_vars.timersBuf[id].ticks_remaining);
+         // timer_set(OWSN_TIMER, 0, opentimers_vars.timersBuf[id].ticks_remaining);
+         timer_id = hwtimer_set(opentimers_vars.timersBuf[id].ticks_remaining, opentimers_timer_callback, NULL);
       }
 
       opentimers_vars.running                         = TRUE;
@@ -293,7 +296,8 @@ void opentimers_timer_callback(void) {
       // at least one timer pending
       opentimers_vars.currentTimeout = min_timeout;
       // bsp_timer_scheduleIn(opentimers_vars.currentTimeout);
-      timer_set(OWSN_TIMER, 0, opentimers_vars.currentTimeout);
+      // timer_set(OWSN_TIMER, 0, opentimers_vars.currentTimeout);
+      timer_id = hwtimer_set(opentimers_vars.currentTimeout, opentimers_timer_callback, NULL);
    } else {
       // no more timers pending
       opentimers_vars.running = FALSE;
@@ -375,7 +379,8 @@ void opentimers_sleepTimeCompesation(uint16_t sleepTime)
       // at least one timer pending
       opentimers_vars.currentTimeout = min_timeout;
       // bsp_timer_scheduleIn(opentimers_vars.currentTimeout);
-      timer_set(OWSN_TIMER, 0, opentimers_vars.currentTimeout);
+      // timer_set(OWSN_TIMER, 0, opentimers_vars.currentTimeout);
+      timer_id = hwtimer_set(opentimers_vars.currentTimeout, opentimers_timer_callback, NULL);
    } else {
       // no more timers pending
       opentimers_vars.running = FALSE;

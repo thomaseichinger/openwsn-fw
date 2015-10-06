@@ -27,22 +27,31 @@ to return the board's description.
 #define PORT_RADIOTIMER_WIDTH               uint32_t
 
 #define PORT_SIGNED_INT_WIDTH               int32_t
-#define PORT_TICS_PER_MS                    1000
+#define PORT_TICS_PER_MS                    1
 #define SCHEDULER_WAKEUP()
 #define SCHEDULER_ENABLE_INTERRUPT()
 
 //===== IEEE802154E timing
 // time-slot related
-#define PORT_TsSlotDuration                 15000
+// #define PORT_TsSlotDuration                 15000
 
-#define PORT_maxTxDataPrepare               2014
-#define PORT_maxRxAckPrepare                900
-#define PORT_maxRxDataPrepare               976
-#define PORT_maxTxAckPrepare                900
+// #define PORT_maxTxDataPrepare               2014
+// #define PORT_maxRxAckPrepare                900
+// #define PORT_maxRxDataPrepare               976
+// #define PORT_maxTxAckPrepare                900
+// // radio speed related
+// #define PORT_delayTx                        549
+// #define PORT_delayRx                        0
+// time-slot related
+#define PORT_TsSlotDuration                 492   // counter counts one extra count, see datasheet
+// execution speed related
+#define PORT_maxTxDataPrepare               66    // 2014us (measured 746us)
+#define PORT_maxRxAckPrepare                10    //  305us (measured  83us)
+#define PORT_maxRxDataPrepare               33    // 1007us (measured  84us)
+#define PORT_maxTxAckPrepare                22    //  305us (measured 219us)
 // radio speed related
-#define PORT_delayTx                        549
+#define PORT_delayTx                        12  
 #define PORT_delayRx                        0
-
 //===== adaptive_sync accuracy
 
 #define SYNC_ACCURACY                       2     // ticks
